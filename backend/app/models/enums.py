@@ -8,3 +8,7 @@ class Role(str, enum.Enum):
     SCHOOL_ADMIN = "SCHOOL_ADMIN"
     TEACHER = "TEACHER"
     STUDENT = "STUDENT"
+
+class AttendanceStatus(str, enum.Enum):
+    PRESENT = "PRESENT"
+    ABSENT = "ABSENT"

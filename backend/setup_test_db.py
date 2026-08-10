@@ -1,7 +1,7 @@
 import asyncio
 from app.db.base import Base
 from app.db.session import engine
-from app.models import user, school, student, teacher, class_
+from app.models import user, school, student, teacher, class_, attendance
 
 async def setup():
     async with engine.begin() as conn:

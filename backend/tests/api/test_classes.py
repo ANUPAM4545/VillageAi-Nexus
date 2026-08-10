@@ -18,12 +18,15 @@ async def test_class_crud_and_rbac():
     token_admin_a = await get_auth_token("schoola_admin@example.com")
     token_teacher_a = await get_auth_token("schoola_teacher@example.com")
 
+    import uuid
+    run_id = uuid.uuid4().hex[:4]
+    
     # School Admin A can create class
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", cookies={"access_token": token_admin_a}) as ac:
         res = await ac.post("/api/v1/classes/", json={
-            "grade": "11",
-            "section": "A",
-            "name": "11th Grade A"
+            "grade": f"11-{run_id}",
+            "section": f"A-{run_id}",
+            "name": f"11th Grade A {run_id}"
         })
         assert res.status_code == 201, res.text
         cls_a_id = res.json()["id"]

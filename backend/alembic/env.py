@@ -26,6 +26,7 @@ from app.models.school import School
 from app.models.student import Student
 from app.models.teacher import Teacher
 from app.models.class_ import Class
+from app.models.attendance import Attendance
 from app.core.config import settings
 target_metadata = Base.metadata
 

@@ -23,22 +23,26 @@ export function Sidebar() {
       { name: "Schools", href: "/schools" },
       { name: "Students", href: "/students" },
       { name: "Teachers", href: "/teachers" },
-      { name: "Classes", href: "/classes" }
+      { name: "Classes", href: "/classes" },
+      { name: "Attendance", href: "/attendance" }
     )
   } else if (user.role === "SCHOOL_ADMIN") {
     navigation.push(
       { name: "Students", href: "/students" },
       { name: "Teachers", href: "/teachers" },
-      { name: "Classes", href: "/classes" }
+      { name: "Classes", href: "/classes" },
+      { name: "Attendance", href: "/attendance" }
     )
   } else if (user.role === "TEACHER") {
     navigation.push(
       { name: "My Profile", href: "/teachers" },
-      { name: "My Classes", href: "/classes" }
+      { name: "My Classes", href: "/classes" },
+      { name: "Attendance", href: "/attendance" }
     )
   } else if (user.role === "STUDENT") {
     navigation.push(
-      { name: "My Classes", href: "/classes" }
+      { name: "My Classes", href: "/classes" },
+      { name: "My Attendance", href: "/attendance" }
     )
   }
 

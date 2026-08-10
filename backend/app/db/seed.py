@@ -1,3 +1,4 @@
+from datetime import datetime
 import asyncio
 from app.db.session import AsyncSessionLocal
 from app.repositories.user import UserRepository
@@ -7,9 +8,11 @@ from app.models.school import School
 from app.models.student import Student
 from app.models.teacher import Teacher
 from app.models.class_ import Class
+from app.models.attendance import Attendance
+from app.models.enums import Role, AttendanceStatus
+from app.models.teacher import Teacher
 from app.schemas.user import UserCreate
 from app.schemas.school import SchoolCreate
-from app.models.enums import Role
 
 async def seed_users():
     async with AsyncSessionLocal() as session:
@@ -219,6 +222,24 @@ async def seed_users():
             print("Created seed class: 9 B (School B)")
             
         await session.commit()
+        
+        # Create Attendance
+        attendance_result = await session.execute(select(Attendance))
+        existing_attendance = attendance_result.scalars().all()
+        
+        target_date = datetime.now().date()
+        if not existing_attendance:
+            att = Attendance(
+                student_id=student_map["STU-A-001"].id,
+                school_id=schools["School A"].id,
+                attendance_date=target_date,
+                status=AttendanceStatus.PRESENT.value,
+                marked_by=user_tch_a.id
+            )
+            session.add(att)
+            await session.commit()
+            print(f"Created seed attendance for STU-A-001 on {target_date}")
+
 
 if __name__ == "__main__":
     asyncio.run(seed_users())

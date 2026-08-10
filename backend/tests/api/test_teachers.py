@@ -19,6 +19,9 @@ async def test_teacher_crud_and_rbac():
     token_teacher_a = await get_auth_token("schoola_teacher@example.com")
     token_student_a = await get_auth_token("schoola_student@example.com")
 
+    import uuid
+    run_id = uuid.uuid4().hex[:4]
+    
     # Super Admin can create teacher
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", cookies={"access_token": token_super}) as ac:
         # Need School A's ID
@@ -27,36 +30,36 @@ async def test_teacher_crud_and_rbac():
         school_b_id = next(s["id"] for s in schools if s["name"] == "School B")
 
         res = await ac.post(f"/api/v1/teachers/?school_id={school_a_id}", json={
-            "teacher_id": "TCH-A-003",
+            "teacher_id": f"TCH-A-{run_id}",
             "name": "Super Created Teacher",
-            "email": "super.teacher@schoola.com",
+            "email": f"super.teacher.{run_id}@schoola.com",
             "phone": "999-999-9999",
             "status": "ACTIVE"
         })
         assert res.status_code == 201, res.text
 
-    # School Admin A can create teacher
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", cookies={"access_token": token_admin_a}) as ac:
-        res = await ac.post("/api/v1/teachers/", json={
-            "teacher_id": "TCH-A-004",
-            "name": "Admin Created Teacher",
-            "email": "admin.teacher@schoola.com"
-        })
-        assert res.status_code == 201
-        tch_a_4_id = res.json()["id"]
-
-        # List teachers
-        res_list = await ac.get("/api/v1/teachers/")
-        assert res_list.status_code == 200
-        assert res_list.json()["total"] >= 4
-
-        # Update teacher
-        res_update = await ac.patch(f"/api/v1/teachers/{tch_a_4_id}", json={
-            "name": "Updated Admin Teacher"
-        })
-        assert res_update.status_code == 200
-        assert res_update.json()["name"] == "Updated Admin Teacher"
-
+        # School Admin A can create teacher
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", cookies={"access_token": token_admin_a}) as ac:
+            res = await ac.post("/api/v1/teachers/", json={
+                "teacher_id": f"TCH-A-{run_id}-B",
+                "name": "Admin Created Teacher",
+                "email": f"admin.teacher.{run_id}@schoola.com"
+            })
+            assert res.status_code == 201
+            tch_a_4_id = res.json()["id"]
+    
+            # List teachers
+            res_list = await ac.get("/api/v1/teachers/")
+            assert res_list.status_code == 200
+            assert res_list.json()["total"] >= 4
+    
+            # Update teacher
+            res_update = await ac.patch(f"/api/v1/teachers/{tch_a_4_id}", json={
+                "name": "Updated Admin Teacher"
+            })
+            assert res_update.status_code == 200
+            assert res_update.json()["name"] == "Updated Admin Teacher"
+    
     # Teacher A cannot create or update
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", cookies={"access_token": token_teacher_a}) as ac:
         res = await ac.post("/api/v1/teachers/", json={

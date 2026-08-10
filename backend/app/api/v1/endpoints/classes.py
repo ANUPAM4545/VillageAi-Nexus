@@ -147,3 +147,54 @@ async def update_class(
         if "uq_school_grade_section" in err_msg:
             raise HTTPException(status_code=400, detail="Class already exists in this school")
         raise HTTPException(status_code=400, detail="Database constraint violation")
+
+from app.schemas.attendance import ClassAttendanceRequest, AttendanceWithStudentResponse
+from app.repositories.attendance import AttendanceRepository
+from app.models.student import Student
+
+@router.post("/{class_id}/attendance", response_model=list[AttendanceWithStudentResponse])
+async def mark_class_attendance(
+    class_id: str,
+    request: ClassAttendanceRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_roles([Role.SUPER_ADMIN, Role.SCHOOL_ADMIN, Role.TEACHER]))
+):
+    stmt = select(Class).where(Class.id == class_id)
+    result = await db.execute(stmt)
+    class_obj = result.scalars().first()
+    
+    if not class_obj:
+        raise HTTPException(status_code=404, detail="Class not found")
+        
+    await verify_school_access(class_obj.school_id, current_user)
+    
+    if current_user.role == Role.TEACHER.value:
+        t_stmt = select(Teacher).where(Teacher.user_id == current_user.id)
+        t_res = await db.execute(t_stmt)
+        teacher_profile = t_res.scalars().first()
+        if not teacher_profile or class_obj.teacher_id != teacher_profile.id:
+            raise HTTPException(status_code=403, detail="Not authorized to mark attendance for this class")
+            
+    # Resolve students based on implicit relation (school_id, grade, section)
+    s_stmt = select(Student).where(
+        Student.school_id == class_obj.school_id,
+        Student.grade == class_obj.grade,
+        Student.section == class_obj.section
+    )
+    s_res = await db.execute(s_stmt)
+    valid_student_ids = {s.id for s in s_res.scalars().all()}
+    
+    # Validate submitted students
+    for record in request.records:
+        if record.student_id not in valid_student_ids:
+            raise HTTPException(status_code=400, detail=f"Student {record.student_id} does not belong to this class")
+            
+    repo = AttendanceRepository(db)
+    upserted = await repo.upsert_class_attendance(
+        school_id=class_obj.school_id,
+        target_date=request.date,
+        records=request.records,
+        marked_by_user_id=current_user.id
+    )
+    
+    return [AttendanceWithStudentResponse.model_validate(u) for u in upserted]
