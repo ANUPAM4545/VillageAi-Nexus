@@ -1,8 +1,43 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useInView } from "framer-motion";
 import { FaqAccordion } from "@/components/FaqAccordion";
+
+const Typewriter = ({ text, delay = 35 }: { text: string, delay?: number }) => {
+  const [displayedText, setDisplayedText] = useState("");
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, amount: 0.5 });
+
+  useEffect(() => {
+    if (!isInView) return;
+    let index = 0;
+    const interval = setInterval(() => {
+      setDisplayedText(text.slice(0, index));
+      index++;
+      if (index > text.length) {
+        clearInterval(interval);
+      }
+    }, delay);
+    return () => clearInterval(interval);
+  }, [text, delay, isInView]);
+
+  return (
+    <span ref={ref}>
+      {displayedText.split('\n').map((line, i) => (
+        <span key={i}>
+          {line}
+          {i < displayedText.split('\n').length - 1 && <br />}
+        </span>
+      ))}
+      <motion.span
+        animate={{ opacity: [0, 1, 0] }}
+        transition={{ repeat: Infinity, duration: 0.8 }}
+        className="inline-block w-[4px] h-[0.9em] bg-black ml-2 -mb-2"
+      />
+    </span>
+  );
+};
 
 const TABS = ["Overview", "Students", "Teachers", "Attendance", "AI Assistant"];
 
@@ -50,10 +85,8 @@ export default function Home() {
             Introducing Village AI Nexus 2.0
           </motion.div>
           
-          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="text-6xl md:text-8xl font-bold tracking-tighter text-black leading-[1.05] max-w-5xl mx-auto">
-            Manage Schools.<br />
-            Track Every Student.<br />
-            All From One Platform.
+          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="text-6xl md:text-8xl font-bold tracking-tighter text-black leading-[1.05] max-w-5xl mx-auto h-[180px] md:h-[280px]">
+            <Typewriter text={"Manage Schools.\nTrack Every Student.\nAll From One Platform."} />
           </motion.h1>
           
           <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="mt-8 text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed">
@@ -213,7 +246,9 @@ export default function Home() {
         <motion.section id="features" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.8 }} className="w-full bg-black text-white py-32 px-4">
           <div className="max-w-6xl mx-auto">
             <div className="text-center max-w-3xl mx-auto mb-20">
-              <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">Built for Modern Educational Infrastructure</h2>
+              <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6 h-[80px] md:h-[100px]">
+                <Typewriter text={"Built for Modern Educational\nInfrastructure"} delay={40} />
+              </h2>
               <p className="text-gray-400 text-lg">Every tool you need to manage your institution, entirely integrated and accessible from a single minimalist dashboard.</p>
             </div>
             
@@ -226,7 +261,7 @@ export default function Home() {
                 { title: "Intelligent Analytics", description: "Targeted dashboards offering actionable, real-time insights tailored strictly to the clearance level of the active user." },
                 { title: "Developer First API", description: "Built on FastAPI. Extensible, fully documented endpoints ready for custom integrations and future scale." }
               ].map((feature, i) => (
-                <motion.div key={i} variants={{hidden: {opacity: 0, y: 20}, show: {opacity: 1, y: 0}}} className="flex flex-col gap-4">
+                <motion.div key={i} variants={{hidden: {opacity: 0, y: 20}, show: {opacity: 1, y: 0}}} whileHover={{ scale: 1.03 }} className="flex flex-col gap-4 p-4 rounded-xl hover:bg-white/5 transition-colors cursor-pointer">
                   <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-black font-bold text-xl">
                     {i + 1}
                   </div>
@@ -251,7 +286,7 @@ export default function Home() {
                 { title: "Assign & Manage", description: "Allocate teachers to classes, establish RBAC permissions, and streamline your daily operational workflows." },
                 { title: "Analyze & Empower", description: "Empower students with AI assistants and gain real-time insights through specialized administrative dashboards." }
               ].map((step, i) => (
-                <motion.div key={i} variants={{hidden: {opacity: 0, y: 20}, show: {opacity: 1, y: 0}}} className="flex flex-col gap-4">
+                <motion.div key={i} variants={{hidden: {opacity: 0, y: 20}, show: {opacity: 1, y: 0}}} whileHover={{ scale: 1.03 }} className="flex flex-col gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer">
                   <div className="text-7xl font-bold text-gray-100 mb-2">0{i + 1}</div>
                   <h3 className="text-2xl font-semibold tracking-tight text-black">{step.title}</h3>
                   <p className="text-gray-500 leading-relaxed">{step.description}</p>
@@ -271,7 +306,7 @@ export default function Home() {
                   { quote: "The role-based access control and tenant isolation gave us the enterprise security guarantees we strictly required.", name: "Dr. Robert Chen", role: "Superintendent, Valley District" },
                   { quote: "Minimalist, extremely fast, and incredibly reliable. This is how educational software was meant to be built.", name: "Emily Watson", role: "IT Director, Summit Academy" }
                 ].map((testimonial, i) => (
-                  <motion.div key={i} variants={{hidden: {opacity: 0, y: 20}, show: {opacity: 1, y: 0}}} className="p-8 bg-white border border-gray-200 rounded-2xl flex flex-col justify-between">
+                  <motion.div key={i} variants={{hidden: {opacity: 0, y: 20}, show: {opacity: 1, y: 0}}} whileHover={{ scale: 1.02 }} className="p-8 bg-white border border-gray-200 rounded-2xl flex flex-col justify-between shadow-sm hover:shadow-md transition-all cursor-pointer">
                     <p className="text-gray-600 italic mb-8">&quot;{testimonial.quote}&quot;</p>
                     <div>
                       <p className="font-bold text-black">{testimonial.name}</p>
@@ -288,19 +323,19 @@ export default function Home() {
           <div className="max-w-6xl mx-auto">
             <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-black mb-16 text-center">Simple, Transparent Pricing</h2>
             <motion.div variants={{hidden: {opacity: 0}, show: {opacity: 1, transition: {staggerChildren: 0.1}}}} initial="hidden" whileInView="show" viewport={{ once: true }} className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
-               <motion.div variants={{hidden: {opacity: 0, y: 20}, show: {opacity: 1, y: 0}}} className="p-10 border border-gray-200 rounded-3xl bg-white text-center">
+               <motion.div variants={{hidden: {opacity: 0, y: 20}, show: {opacity: 1, y: 0}}} whileHover={{ scale: 1.02 }} className="p-10 border border-gray-200 rounded-3xl bg-white text-center shadow-sm hover:shadow-md transition-all">
                   <h3 className="text-xl font-bold mb-2">Starter</h3>
                   <p className="text-4xl font-bold mb-6">$0<span className="text-lg text-gray-400 font-normal">/mo</span></p>
                   <p className="text-sm text-gray-500 mb-8">Perfect for small private schools.</p>
                   <Link href="/login" className="block w-full py-3 rounded-full border border-gray-200 font-medium hover:bg-gray-50 transition-colors">Get Started</Link>
                </motion.div>
-               <motion.div variants={{hidden: {opacity: 0, y: 20}, show: {opacity: 1, y: 0}}} className="p-10 border border-black rounded-3xl bg-black text-white text-center transform scale-105 shadow-xl">
+               <motion.div variants={{hidden: {opacity: 0, y: 20}, show: {opacity: 1, y: 0}}} whileHover={{ scale: 1.02 }} className="p-10 border border-black rounded-3xl bg-black text-white text-center transform scale-105 shadow-xl hover:shadow-2xl transition-all relative z-10">
                   <h3 className="text-xl font-bold mb-2">Professional</h3>
                   <p className="text-4xl font-bold mb-6">$299<span className="text-lg text-gray-400 font-normal">/mo</span></p>
                   <p className="text-sm text-gray-400 mb-8">For growing school districts.</p>
                   <Link href="/login" className="block w-full py-3 rounded-full bg-white text-black font-medium hover:bg-gray-100 transition-colors">Start Free Trial</Link>
                </motion.div>
-               <motion.div variants={{hidden: {opacity: 0, y: 20}, show: {opacity: 1, y: 0}}} className="p-10 border border-gray-200 rounded-3xl bg-white text-center">
+               <motion.div variants={{hidden: {opacity: 0, y: 20}, show: {opacity: 1, y: 0}}} whileHover={{ scale: 1.02 }} className="p-10 border border-gray-200 rounded-3xl bg-white text-center shadow-sm hover:shadow-md transition-all">
                   <h3 className="text-xl font-bold mb-2">Enterprise</h3>
                   <p className="text-4xl font-bold mb-6">Custom</p>
                   <p className="text-sm text-gray-500 mb-8">Dedicated infrastructure & support.</p>
