@@ -10,7 +10,14 @@ from app.schemas.user import UserResponse
 from app.api.deps import get_current_user
 from app.core.config import settings
 
+from app.db.seed import seed_users
+
 router = APIRouter()
+
+@router.get("/seed")
+async def seed_database():
+    await seed_users()
+    return {"message": "Database seeded successfully!"}
 
 class LoginRequest(BaseModel):
     email: str
@@ -35,7 +42,7 @@ async def login(
     auth_service.verify_active(user)
     
     access_token = create_access_token(
-        subject=user.id, role=user.role.value
+        subject=str(user.id), role=user.role.value
     )
     
     response.set_cookie(
