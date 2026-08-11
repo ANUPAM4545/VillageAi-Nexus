@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_
+from sqlalchemy import select, func, and_, desc
 from typing import Dict, Any, List
 from datetime import date
 
@@ -15,7 +15,8 @@ from app.schemas.dashboard import (
     TeacherDashboardResponse,
     StudentDashboardResponse,
     AttendanceSummary,
-    AssignedClassInfo
+    AssignedClassInfo,
+    RecentAttendance
 )
 
 class DashboardRepository:
@@ -164,9 +165,10 @@ class DashboardRepository:
                 attendance_percentage=0.0,
                 present_days=0,
                 absent_days=0,
+                total_days=0
             )
             
-        # 2. Get attendance records
+        # 2. Get attendance aggregate records
         stmt_att = select(
             Attendance.status,
             func.count(Attendance.id)
@@ -189,8 +191,28 @@ class DashboardRepository:
         if total > 0:
             percentage = (present / total) * 100.0
             
-        # 3. Try to find their class
+        # 2b. Get Recent Attendance (max 5)
+        stmt_recent_att = select(Attendance).where(
+            Attendance.student_id == student.id
+        ).order_by(desc(Attendance.attendance_date)).limit(5)
+        
+        recent_att_records = (await self.db.execute(stmt_recent_att)).scalars().all()
+        recent_attendance = [
+            RecentAttendance(date=r.attendance_date.isoformat(), status=r.status)
+            for r in recent_att_records
+        ]
+            
+        # 3. Get School Name
+        school_name = None
+        stmt_school = select(School).where(School.id == school_id)
+        school = (await self.db.execute(stmt_school)).scalars().first()
+        if school:
+            school_name = school.name
+            
+        # 4. Get Class and Teacher
+        class_id = None
         class_name = None
+        teacher_name = None
         stmt_cls = select(Class).where(
             Class.school_id == school_id,
             Class.grade == student.grade,
@@ -198,13 +220,28 @@ class DashboardRepository:
         )
         cls = (await self.db.execute(stmt_cls)).scalars().first()
         if cls:
+            class_id = cls.id
             class_name = cls.name
+            if cls.teacher_id:
+                stmt_teacher = select(Teacher).where(Teacher.id == cls.teacher_id)
+                teacher = (await self.db.execute(stmt_teacher)).scalars().first()
+                if teacher:
+                    teacher_name = teacher.name
             
         return StudentDashboardResponse(
+            student_id=student.id,
+            student_display_id=student.student_id,
+            student_name=student.name,
+            student_status=student.status,
+            school_name=school_name,
+            class_id=class_id,
+            class_name=class_name,
+            class_grade=student.grade,
+            class_section=student.section,
+            teacher_name=teacher_name,
             attendance_percentage=percentage,
             present_days=present,
             absent_days=absent,
-            class_name=class_name,
-            class_grade=student.grade,
-            class_section=student.section
+            total_days=total,
+            recent_attendance=recent_attendance
         )

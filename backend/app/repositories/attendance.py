@@ -15,7 +15,7 @@ class AttendanceRepository:
 
     async def get_attendance_history(
         self,
-        school_id: str,
+        school_id: Optional[str],
         page: int = 1,
         page_size: int = 20,
         start_date: Optional[date] = None,
@@ -27,7 +27,8 @@ class AttendanceRepository:
     ) -> Tuple[List[Attendance], int, int]:
         
         query = select(Attendance).join(Student).options(selectinload(Attendance.student))
-        query = query.where(Attendance.school_id == school_id)
+        if school_id:
+            query = query.where(Attendance.school_id == school_id)
         
         if start_date:
             query = query.where(Attendance.attendance_date >= start_date)
@@ -136,7 +137,7 @@ class AttendanceRepository:
 
     async def get_school_summary(
         self, 
-        school_id: str, 
+        school_id: Optional[str], 
         target_date: Optional[date] = None,
         class_grade: Optional[str] = None,
         class_section: Optional[str] = None
@@ -145,9 +146,10 @@ class AttendanceRepository:
         query = select(
             Attendance.status,
             func.count(Attendance.id)
-        ).join(Student).where(
-            Attendance.school_id == school_id
-        )
+        ).join(Student)
+        
+        if school_id:
+            query = query.where(Attendance.school_id == school_id)
         
         if target_date:
             query = query.where(Attendance.attendance_date == target_date)

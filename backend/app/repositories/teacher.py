@@ -6,22 +6,22 @@ from app.schemas.teacher import TeacherCreate, TeacherUpdate
 import math
 
 class TeacherRepository(TenantAwareRepository[Teacher]):
-    def __init__(self, session, school_id: str):
+    def __init__(self, session, school_id: Optional[str]):
         super().__init__(session, Teacher, school_id)
 
     async def get_by_id(self, id: str) -> Optional[Teacher]:
-        stmt = select(Teacher).where(
-            Teacher.id == id,
-            Teacher.school_id == self.school_id
-        )
+        stmt = select(Teacher).where(Teacher.id == id)
+        if self.school_id:
+            stmt = stmt.where(Teacher.school_id == self.school_id)
+        
         result = await self.session.execute(stmt)
         return result.scalars().first()
         
     async def get_by_user_id(self, user_id: str) -> Optional[Teacher]:
-        stmt = select(Teacher).where(
-            Teacher.user_id == user_id,
-            Teacher.school_id == self.school_id
-        )
+        stmt = select(Teacher).where(Teacher.user_id == user_id)
+        if self.school_id:
+            stmt = stmt.where(Teacher.school_id == self.school_id)
+            
         result = await self.session.execute(stmt)
         return result.scalars().first()
 
@@ -32,7 +32,9 @@ class TeacherRepository(TenantAwareRepository[Teacher]):
         search: Optional[str] = None,
         status: Optional[str] = None
     ) -> Tuple[list[Teacher], int]:
-        stmt = select(Teacher).where(Teacher.school_id == self.school_id)
+        stmt = select(Teacher)
+        if self.school_id:
+            stmt = stmt.where(Teacher.school_id == self.school_id)
 
         if search:
             search_filter = or_(

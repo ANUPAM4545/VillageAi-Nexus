@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
@@ -9,6 +9,10 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "super_secret_key_change_me_in_production"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7
     
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    AI_PROVIDER: str = "fake"
+    AI_API_KEY: Optional[str] = None
+    AI_MODEL: Optional[str] = None
+    
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
 settings = Settings()

@@ -29,7 +29,7 @@ async def get_dashboard(
     elif current_user.role == Role.SCHOOL_ADMIN:
         if not current_user.school_id:
             raise HTTPException(status_code=400, detail="User not assigned to a school")
-        return await dashboard_repo.get_school_admin_metrics(current_user.school_id)
+        return await dashboard_repo.get_school_admin_metrics(str(current_user.school_id))
         
     elif current_user.role == Role.TEACHER:
         if not current_user.school_id:
@@ -41,12 +41,12 @@ async def get_dashboard(
         if not teacher:
             raise HTTPException(status_code=400, detail="Teacher profile not found")
             
-        return await dashboard_repo.get_teacher_metrics(teacher.id, current_user.school_id)
+        return await dashboard_repo.get_teacher_metrics(str(teacher.id), str(current_user.school_id))
         
     elif current_user.role == Role.STUDENT:
         if not current_user.school_id:
             raise HTTPException(status_code=400, detail="User not assigned to a school")
-        return await dashboard_repo.get_student_metrics(current_user.id, current_user.school_id)
+        return await dashboard_repo.get_student_metrics(str(current_user.id), str(current_user.school_id))
         
     raise HTTPException(status_code=403, detail="Role not supported for dashboard")
 

@@ -105,9 +105,10 @@ async def test_super_admin_tenant_aware_requires_param():
         schools = (await ac.get("/api/v1/schools/")).json()
         school_b_id = next(s["id"] for s in schools if s["name"] == "School B")
         
-        # Missing school_id should 400
+        # Missing school_id returns None for Super Admin
         res = await ac.get(f"/api/v1/rbac/tenant-aware")
-        assert res.status_code == 400
+        assert res.status_code == 200
+        assert res.json()["resolved_school_id"] is None
         
         # With school_id works
         res_valid = await ac.get(f"/api/v1/rbac/tenant-aware?school_id={school_b_id}")

@@ -65,7 +65,7 @@ async def list_classes(
         teacher_profile = res.scalars().first()
         if not teacher_profile:
             return PaginatedClassResponse(items=[], page=page, page_size=page_size, total=0, total_pages=0)
-        teacher_id = teacher_profile.id
+        teacher_id = str(teacher_profile.id)
 
     class_repo = ClassRepository(db, authorized_school_id)
     items, total = await class_repo.list_classes(
@@ -79,7 +79,7 @@ async def list_classes(
     
     total_pages = math.ceil(total / page_size) if total > 0 else 0
     return PaginatedClassResponse(
-        items=items,
+        items=[ClassResponse.model_validate(item) for item in items],
         page=page,
         page_size=page_size,
         total=total,
@@ -125,7 +125,7 @@ async def update_class(
     if not class_obj:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Class not found")
         
-    await verify_school_access(class_obj.school_id, current_user)
+    await verify_school_access(str(class_obj.school_id), current_user)
     
     if class_in.teacher_id:
         t_stmt = select(Teacher).where(Teacher.id == class_in.teacher_id)
@@ -138,7 +138,7 @@ async def update_class(
         if teacher.status != "ACTIVE":
             raise HTTPException(status_code=400, detail="Cannot assign an inactive teacher")
 
-    class_repo = ClassRepository(db, class_obj.school_id)
+    class_repo = ClassRepository(db, str(class_obj.school_id))
     try:
         return await class_repo.update(class_obj, class_in)
     except IntegrityError as e:
@@ -166,7 +166,7 @@ async def mark_class_attendance(
     if not class_obj:
         raise HTTPException(status_code=404, detail="Class not found")
         
-    await verify_school_access(class_obj.school_id, current_user)
+    await verify_school_access(str(class_obj.school_id), current_user)
     
     if current_user.role == Role.TEACHER.value:
         t_stmt = select(Teacher).where(Teacher.user_id == current_user.id)
@@ -191,10 +191,10 @@ async def mark_class_attendance(
             
     repo = AttendanceRepository(db)
     upserted = await repo.upsert_class_attendance(
-        school_id=class_obj.school_id,
+        school_id=str(class_obj.school_id),
         target_date=request.date,
         records=request.records,
-        marked_by_user_id=current_user.id
+        marked_by_user_id=str(current_user.id)
     )
     
     return [AttendanceWithStudentResponse.model_validate(u) for u in upserted]

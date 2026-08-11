@@ -111,6 +111,10 @@ async def seed_users():
             
         await session.commit()
         
+        # Build student_map
+        student_result_after = await session.execute(select(Student))
+        student_map = {s.student_id: s for s in student_result_after.scalars().all()}
+        
         # Create Teachers
         teacher_result = await session.execute(select(Teacher))
         existing_teachers = teacher_result.scalars().all()
@@ -234,7 +238,7 @@ async def seed_users():
                 school_id=schools["School A"].id,
                 attendance_date=target_date,
                 status=AttendanceStatus.PRESENT.value,
-                marked_by=user_tch_a.id
+                marked_by=user_map["schoola_teacher@example.com"]
             )
             session.add(att)
             await session.commit()

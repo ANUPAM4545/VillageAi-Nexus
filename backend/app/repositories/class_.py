@@ -6,14 +6,14 @@ from app.models.teacher import Teacher
 from app.schemas.class_ import ClassCreate, ClassUpdate
 
 class ClassRepository(TenantAwareRepository[Class]):
-    def __init__(self, session, school_id: str):
+    def __init__(self, session, school_id: Optional[str]):
         super().__init__(session, Class, school_id)
 
     async def get_by_id(self, id: str) -> Optional[Class]:
-        stmt = select(Class).where(
-            Class.id == id,
-            Class.school_id == self.school_id
-        )
+        stmt = select(Class).where(Class.id == id)
+        if self.school_id:
+            stmt = stmt.where(Class.school_id == self.school_id)
+            
         result = await self.session.execute(stmt)
         return result.scalars().first()
 
@@ -26,7 +26,9 @@ class ClassRepository(TenantAwareRepository[Class]):
         teacher_id: Optional[str] = None,
         status: Optional[str] = None
     ) -> Tuple[list[Class], int]:
-        stmt = select(Class).where(Class.school_id == self.school_id)
+        stmt = select(Class)
+        if self.school_id:
+            stmt = stmt.where(Class.school_id == self.school_id)
 
         if grade:
             stmt = stmt.where(Class.grade == grade)

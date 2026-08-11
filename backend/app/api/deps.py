@@ -53,19 +53,14 @@ def require_roles(roles: List[Role]) -> Callable:
 
 async def get_current_school(
     current_user: User = Depends(get_current_user),
-    school_id: Optional[str] = Query(None, description="School ID (Required for Super Admin)")
-) -> str:
+    school_id: Optional[str] = Query(None, description="School ID (Optional for Super Admin)")
+) -> Optional[str]:
     """
     Core tenant resolver.
-    - Super Admins must explicitly provide school_id context.
+    - Super Admins can provide school_id context, or None to access all tenants.
     - Ordinary users always resolve to their assigned school (ignoring query params).
     """
     if current_user.role == Role.SUPER_ADMIN:
-        if not school_id:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Super Admin must explicitly provide school_id for tenant-aware operations"
-            )
         return school_id
     
     if current_user.school_id:

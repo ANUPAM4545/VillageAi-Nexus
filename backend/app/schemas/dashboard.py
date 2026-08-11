@@ -31,10 +31,30 @@ class AssignedClassInfo(BaseModel):
 class TeacherDashboardResponse(BaseModel):
     assigned_classes: List[AssignedClassInfo]
 
+class RecentAttendance(BaseModel):
+    date: str
+    status: str
+
 class StudentDashboardResponse(BaseModel):
-    attendance_percentage: float
-    present_days: int
-    absent_days: int
+    # Personal Identity
+    student_id: Optional[str] = None
+    student_display_id: Optional[str] = None
+    student_name: Optional[str] = None
+    student_status: Optional[str] = None
+    
+    # Class & Teacher
+    class_id: Optional[str] = None
     class_name: Optional[str] = None
     class_grade: Optional[str] = None
     class_section: Optional[str] = None
+    teacher_name: Optional[str] = None
+    school_name: Optional[str] = None
+    
+    # Attendance Metrics
+    attendance_percentage: float
+    present_days: int
+    absent_days: int
+    total_days: int = 0
+    
+    # Recent Attendance
+    recent_attendance: List[RecentAttendance] = []

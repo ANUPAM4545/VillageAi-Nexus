@@ -6,14 +6,14 @@ from app.schemas.student import StudentCreate, StudentUpdate
 import math
 
 class StudentRepository(TenantAwareRepository[Student]):
-    def __init__(self, session, school_id: str):
+    def __init__(self, session, school_id: Optional[str]):
         super().__init__(session, Student, school_id)
 
     async def get_by_id(self, id: str) -> Optional[Student]:
-        stmt = select(Student).where(
-            Student.id == id,
-            Student.school_id == self.school_id
-        )
+        stmt = select(Student).where(Student.id == id)
+        if self.school_id:
+            stmt = stmt.where(Student.school_id == self.school_id)
+            
         result = await self.session.execute(stmt)
         return result.scalars().first()
 
@@ -26,7 +26,9 @@ class StudentRepository(TenantAwareRepository[Student]):
         section: Optional[str] = None,
         status: Optional[str] = None
     ) -> Tuple[list[Student], int]:
-        stmt = select(Student).where(Student.school_id == self.school_id)
+        stmt = select(Student)
+        if self.school_id:
+            stmt = stmt.where(Student.school_id == self.school_id)
 
         if search:
             search_filter = or_(

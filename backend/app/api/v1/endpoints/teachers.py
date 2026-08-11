@@ -73,6 +73,18 @@ async def list_teachers(
         total_pages=total_pages
     )
 
+@router.get("/me", response_model=TeacherResponse)
+async def get_my_teacher_profile(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_roles([Role.TEACHER]))
+):
+    stmt = select(Teacher).where(Teacher.user_id == current_user.id)
+    result = await db.execute(stmt)
+    teacher = result.scalars().first()
+    if not teacher:
+        raise HTTPException(status_code=404, detail="Teacher profile not found")
+    return teacher
+
 @router.get("/{teacher_id}", response_model=TeacherResponse)
 async def get_teacher(
     teacher_id: str,
