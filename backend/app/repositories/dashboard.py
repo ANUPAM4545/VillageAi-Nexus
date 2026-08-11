@@ -37,7 +37,7 @@ class DashboardRepository:
         classes_total = (await self.db.execute(stmt_classes)).scalar() or 0
 
         # Count attendance today
-        target_date = date.today().isoformat()
+        target_date = date.today()
         stmt_att = select(
             Attendance.status,
             func.count(Attendance.id)
@@ -96,7 +96,7 @@ class DashboardRepository:
         )
         classes = (await self.db.execute(stmt_classes)).scalars().all()
         
-        target_date = date.today().isoformat()
+        target_date = date.today()
         
         assigned_classes_info = []
         for cls in classes:
@@ -138,10 +138,10 @@ class DashboardRepository:
                 attendance_percentage = (present / marked) * 100.0
                 
             assigned_classes_info.append(AssignedClassInfo(
-                class_id=cls.id,
-                grade=cls.grade,
-                section=cls.section,
-                name=cls.name,
+                class_id=str(cls.id),
+                grade=str(cls.grade),
+                section=str(cls.section) if cls.section else None,
+                name=str(cls.name) if cls.name else None,
                 students_total=class_students_total,
                 attendance_marked=attendance_marked,
                 attendance_percentage=attendance_percentage
@@ -198,7 +198,7 @@ class DashboardRepository:
         
         recent_att_records = (await self.db.execute(stmt_recent_att)).scalars().all()
         recent_attendance = [
-            RecentAttendance(date=r.attendance_date.isoformat(), status=r.status)
+            RecentAttendance(date=r.attendance_date.isoformat(), status=str(r.status))
             for r in recent_att_records
         ]
             
@@ -229,16 +229,16 @@ class DashboardRepository:
                     teacher_name = teacher.name
             
         return StudentDashboardResponse(
-            student_id=student.id,
-            student_display_id=student.student_id,
-            student_name=student.name,
-            student_status=student.status,
-            school_name=school_name,
-            class_id=class_id,
-            class_name=class_name,
-            class_grade=student.grade,
-            class_section=student.section,
-            teacher_name=teacher_name,
+            student_id=str(student.id),
+            student_display_id=str(student.student_id),
+            student_name=str(student.name),
+            student_status=str(student.status),
+            school_name=str(school_name) if school_name else None,
+            class_id=str(class_id) if class_id else None,
+            class_name=str(class_name) if class_name else None,
+            class_grade=str(student.grade),
+            class_section=str(student.section) if student.section else None,
+            teacher_name=str(teacher_name) if teacher_name else None,
             attendance_percentage=percentage,
             present_days=present,
             absent_days=absent,
