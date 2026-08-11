@@ -12,7 +12,7 @@ from sqlalchemy import select
 
 router = APIRouter()
 
-@router.get("/", response_model=Any)
+@router.get("", response_model=Any)
 async def get_dashboard(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
