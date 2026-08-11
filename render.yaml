@@ -23,8 +23,8 @@ services:
       - key: CORS_ORIGINS
         value: '["https://your-vercel-domain.vercel.app"]' # Replace with your actual Vercel domain after deploying frontend
       - key: AI_PROVIDER
-        value: openai # or gemini/fake
+        value: gemini
       - key: AI_API_KEY
         sync: false # Set this manually in the Render dashboard
       - key: AI_MODEL
-        value: gpt-4o-mini # or appropriate model
+        value: gemini-flash-latest
