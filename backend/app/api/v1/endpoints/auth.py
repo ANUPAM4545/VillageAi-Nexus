@@ -49,8 +49,8 @@ async def login(
         key="access_token",
         value=access_token,
         httponly=True,
-        secure=False, # Set to True in production with HTTPS
-        samesite="lax",
+        secure=True, 
+        samesite="none",
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         path="/"
     )
@@ -59,7 +59,7 @@ async def login(
 
 @router.post("/logout")
 async def logout(response: Response):
-    response.delete_cookie(key="access_token", path="/")
+    response.delete_cookie(key="access_token", path="/", secure=True, samesite="none")
     return {"success": True}
 
 @router.get("/me", response_model=UserResponse)
